@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Sierpiński Triangle - Chaos Game</title>
+		<style>
+			body { 
+				font-family:  Arial, Helvetica, sans-serif; 
+			}
+
+			.ontop {
+				position: fixed;
+				width: 100%;
+				font-size: 32px;
+				color: white;
+				background-color: rgba(64, 64, 64, 0.5);
+				z-index: 1;
+			}
+
+			.fullpage {
+				position: fixed;
+				width: 100%;
+				height: 100%;
+				top: 0;
+				left: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="ontop">Number of iterations: <span id="n" /></div>
+		<canvas class="fullpage" id="board" />
+
+		<script>
+			'use strict';
+
+			// Constants for identifying html elements and changing program behavior
+			const timerInterval = 1;
+			const idCounterDisplay = 'n';
+			const idCanvas = 'board';
+			const drawColor = 'white';
+			const backgroundColor = 'black';
+
+			// Helper function for getting a random integer from 0 up to max - 1
+			// Adapted from: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+			const getRandomInt = (max) => {
+				return (Math.random() * (max | 0)) | 0;
+			}
+
+			// Proxy for updating the <span> indicating number of iterations
+			// when updating the variable that holds that value
+			const nHandler = {
+				set: (obj, prop, value) => {
+					if (prop === 'n') {
+						document.getElementById(idCounterDisplay).innerHTML = value;
+					}
+					obj[prop] = value;
+					return true;
+				}
+			};
+
+			// Implementation of the proxy, this object holds the number of iterations
+			// made by the algorithm
+			const iterations = new Proxy({ n: 0 }, nHandler);
+			iterations.n = 0;
+
+			// Drawing board (canvas)
+			const canvas = document.getElementById(idCanvas);
+			const canvasStyle = window.getComputedStyle(canvas);
+			//canvas.setAttribute('width', canvasStyle.getPropertyValue('width'));
+			//canvas.setAttribute('height', canvasStyle.getPropertyValue('height'));
+			canvas.setAttribute('width', canvasStyle.getPropertyValue('width'));
+			canvas.setAttribute('height', canvasStyle.getPropertyValue('height'));
+			const board = canvas.getContext('2d');
+			
+			// Seed polygon
+			const width = canvas.width;
+			const height = canvas.height;
+			const polygon = [{ x: 0, y: height-1 }, { x: width/2-1, y: 0 }, { x: width, y: height }];
+
+			// Current point (for drawing), must be inside seed polygon
+			let currentPoint = { 
+				x: getRandomInt(width), 
+				y: getRandomInt(height) 
+			};
+
+			// Main function for generating the Sierpiński Triangle
+			const makeIteration = () => {
+				let polySize = polygon.length;
+				let randomCorner = polygon[getRandomInt(polySize)];
+
+				let middlePoint = {
+					x: ((currentPoint.x + randomCorner.x) / 2) | 0,
+					y: ((currentPoint.y + randomCorner.y) / 2) | 0
+				};
+
+				currentPoint = middlePoint;
+
+				board.fillRect(middlePoint.x, middlePoint.y, 1, 1);
+
+				iterations.n++;
+			};
+
+			const main = () => {
+				board.fillStyle = backgroundColor;
+				board.fillRect(0, 0, width, height);
+
+				board.fillStyle = drawColor;
+				window.setInterval(makeIteration, timerInterval);
+			}
+
+			main();
+		</script>
+	</body>
+</html>
